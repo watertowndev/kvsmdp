@@ -44,10 +44,10 @@ impl From<DataFieldError> for DataRowError {
 }
 
 impl DataRow {
-    const EXPECTED_LEN: usize = 232;
+    const MINIMUM_LENGTH: usize = 183;
 
     pub fn try_create(row: &str) -> Result<DataRow, DataRowError> {
-        if row.len() < Self::EXPECTED_LEN {
+        if row.len() < Self::MINIMUM_LENGTH {
             return Err(DataRowError::BadRowLength(row.len()))
         }
 

@@ -1,11 +1,12 @@
 use std::fs;
 use std::path::Path;
-use crate::datarow::{DataRow, DataRowError};
+use crate::datarow::DataRow;
+use crate::loadwarning::LoadWarning;
 
 #[derive(Debug)]
 pub struct DataFile {
     rows: Vec<DataRow>,
-    load_warnings: Vec<DataRowError>
+    load_warnings: Vec<LoadWarning>
 }
 
 #[derive(Debug)]
@@ -29,12 +30,12 @@ impl DataFile {
         }
 
         let mut rows: Vec<DataRow> = vec![];
-        let mut load_warnings: Vec<DataRowError> = vec![];
+        let mut load_warnings: Vec<LoadWarning> = vec![];
 
-        for row in data.lines() {
+        for (row_num, row) in data.lines().enumerate() {
             match DataRow::try_create(row) {
                 Ok(r) => rows.push(r),
-                Err(e) => load_warnings.push(e)
+                Err(e) => load_warnings.push(LoadWarning::new(row_num, e))
             }
         }
 
@@ -42,5 +43,13 @@ impl DataFile {
             rows,
             load_warnings
         })
+    }
+
+    pub fn rows(&self) -> &Vec<DataRow> {
+        &self.rows
+    }
+
+    pub fn warnings(&self) -> &Vec<LoadWarning> {
+        &self.load_warnings
     }
 }

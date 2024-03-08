@@ -3,20 +3,17 @@
 pub struct DataField {
     name: String,
     raw: String,
-    data: String
+    data: Option<String>
 }
 
 #[derive(Debug)]
 pub enum DataFieldError {
-    StartOutOfRange(usize),
-    EndOutOfRange(usize),
-    StartAfterEnd,
-    NonASCIIRow,
-    InvalidAccountID,
-    ExcludedAccountID,
-    InvalidMeterSize,
-    InvalidSpecialCode,
-    BadNumber
+    StartAfterEnd(String),
+    NonASCIIRow(String),
+    InvalidOrExcludedAccountID(String),
+    InvalidMeterSize(String),
+    InvalidSpecialCode(String),
+    BadNumber(String)
 }
 
 type Result<T> = std::result::Result<T, DataFieldError>;
@@ -26,26 +23,35 @@ impl DataField {
                         start_idx: usize, end_idx: usize, post_fn: &dyn Fn(String) -> Result<String>)
                         -> Result<DataField>
     {
-        if start_idx > row.len() {
-            return Err(DataFieldError::StartOutOfRange(start_idx));
+        //fields can be optional and result in lines that are short
+        if start_idx > row.len() || end_idx > row.len() {
+            return Ok(DataField {
+                name: name.to_string(),
+                raw: "".to_string(),
+                data: None
+            });
         }
-        if end_idx > row.len() {
-            return Err(DataFieldError::EndOutOfRange(end_idx));
-        }
+
         if start_idx > end_idx {
-            return Err(DataFieldError::StartAfterEnd);
+            return Err(DataFieldError::StartAfterEnd(name.to_string()));
         }
+
         if !row.is_ascii() {
-            return Err(DataFieldError::NonASCIIRow);
+            return Err(DataFieldError::NonASCIIRow(name.to_string()));
         }
 
         let raw = row[start_idx..end_idx].to_string();
         let data = post_fn(raw.trim().to_string())?;
 
+
         Ok(DataField {
             name: name.to_string(),
             raw,
-            data
+            data: if data.len() == 0 {
+                None
+            } else {
+                Some(data)
+            },
         })
     }
 }
@@ -54,14 +60,16 @@ impl DataField {
 /// and that it isn't excluded intentionally.
 pub fn validate_acct(value: String) -> Result<String> {
     let acct = trim(value)?;
-
-    if acct.starts_with("54777") {
-        Err(DataFieldError::ExcludedAccountID)
+    if acct.len() < 10 {
+        Err(DataFieldError::InvalidOrExcludedAccountID(acct))
+    }
+    else if acct.starts_with("54777") {
+        Err(DataFieldError::InvalidOrExcludedAccountID(acct))
     }
     else {
         match &acct[0..2] {
             "51" | "52" | "53" | "54" => Ok(acct),
-            _ => Err(DataFieldError::InvalidAccountID)
+            _ => Err(DataFieldError::InvalidOrExcludedAccountID(acct))
         }
     }
 }
@@ -108,7 +116,7 @@ pub fn fix_meter_size(value: String) -> Result<String> {
         "4" => Ok("4".to_string()),
         "6" => Ok("6".to_string()),
         "8" => Ok("8".to_string()),
-        _ => Err(DataFieldError::InvalidMeterSize)
+        _ => Err(DataFieldError::InvalidMeterSize(meter_size))
     }
 }
 
@@ -121,16 +129,24 @@ pub fn decode_special(value: String) -> Result<String> {
         "X" => Ok("Exempt".to_string()),
         "O" => Ok("Outside User".to_string()),
         "R" => Ok("Removed".to_string()),
-        _ => Err(DataFieldError::InvalidSpecialCode)
+        _ => Err(DataFieldError::InvalidSpecialCode(special))
     }
 }
 
-/// Trim leading zeroes.
+/// Trim leading zeroes. Will erase all zeroes if nothing else is present.
+/// On failure or negative, returns an Ok(empty string).
 pub fn trim_zeroes(value: String) -> Result<String> {
     let num = value.parse::<u32>();
 
     match num {
-        Ok(x) => Ok(x.to_string()),
-        Err(_) => Err(DataFieldError::BadNumber)
+        Ok(x) => {
+            if x <= 0 {
+               Ok("".to_string())
+            }
+            else {
+                Ok(x.to_string())
+            }
+        },
+        Err(_) => Ok("".to_string())
     }
 }
