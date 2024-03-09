@@ -13,7 +13,8 @@ pub enum DataFieldError {
     InvalidOrExcludedAccountID(String),
     InvalidMeterSize(String),
     InvalidSpecialCode(String),
-    BadNumber(String)
+    BadNumber(String),
+    FieldContainsQuote
 }
 
 type Result<T> = std::result::Result<T, DataFieldError>;
@@ -59,7 +60,7 @@ impl DataField {
 /// Check that account starts with appropriate numbers
 /// and that it isn't excluded intentionally.
 pub fn validate_acct(value: String) -> Result<String> {
-    let acct = trim(value)?;
+    let acct = cleanup(value)?;
     if acct.len() < 10 {
         Err(DataFieldError::InvalidOrExcludedAccountID(acct))
     }
@@ -75,13 +76,19 @@ pub fn validate_acct(value: String) -> Result<String> {
 }
 
 /// Remove whitespace from the beginning and end of value.
-pub fn trim(value: String) -> Result<String> {
-    Ok(value.trim().to_string())
+/// Converts ampersands to 'and' and commas to spaces.
+pub fn cleanup(value: String) -> Result<String> {
+    if value.contains("\"") {
+        Err(DataFieldError::FieldContainsQuote)
+    }
+    else {
+        Ok(value.trim().replace("&", "and").replace(",", " "))
+    }
 }
 
 /// Normalize the PrintKey value.
 pub fn fix_printkey(value: String) -> Result<String> {
-    let printkey = trim(value)?;
+    let printkey = cleanup(value)?;
     let mut npk: String;
     if printkey.len() == "0-0000-000.000".len() {
         npk = printkey[0..2].to_string();
@@ -105,7 +112,7 @@ pub fn fix_printkey(value: String) -> Result<String> {
 
 /// Convert the size reading or code into a normalized value.
 pub fn fix_meter_size(value: String) -> Result<String> {
-    let meter_size = trim(value)?;
+    let meter_size = cleanup(value)?;
     match meter_size.as_str() {
         "0" | "0.625" => Ok("0.625".to_string()),
         "5" | "0.75" => Ok("0.75".to_string()),
@@ -122,7 +129,7 @@ pub fn fix_meter_size(value: String) -> Result<String> {
 
 /// Decode the Special value into expanded terms.
 pub fn decode_special(value: String) -> Result<String> {
-    let special = trim(value)?;
+    let special = cleanup(value)?;
     match special.as_str() {
         "S" => Ok("Shut".to_string()),
         "E" => Ok("Elderly Exemption".to_string()),
