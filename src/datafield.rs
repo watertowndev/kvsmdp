@@ -1,3 +1,4 @@
+use crate::datarow::DataRowDef;
 
 #[derive(Debug, Clone)]
 pub struct DataField {
@@ -32,41 +33,39 @@ impl DataField {
         }
     }
 
-    pub fn try_from_row(row: &str, name: &str,
-                        start_idx: usize, end_idx: usize, post_fn: &dyn Fn(String) -> Result<String>)
-                        -> Result<DataField>
+    pub fn try_from_str(row: &str, row_def: &DataRowDef) -> Result<DataField>
     {
         //fields can be optional and result in lines that are short
         //return nothing if the start is after the row (it's truncated)
-        if start_idx > row.len() {
+        if row_def.start_idx > row.len() {
             return Ok(DataField {
-                name: name.to_string(),
+                name: row_def.name.to_string(),
                 raw: "".to_string(),
                 data: None
             });
         }
 
-        let end_idx = if end_idx > row.len() {
+        let end_idx = if row_def.end_idx > row.len() {
             row.len()
         }
         else {
-            end_idx
+            row_def.end_idx
         };
 
-        if start_idx > end_idx {
-            return Err(DataFieldError::StartAfterEnd(name.to_string()));
+        if row_def.start_idx > end_idx {
+            return Err(DataFieldError::StartAfterEnd(row_def.name.to_string()));
         }
 
         if !row.is_ascii() {
-            return Err(DataFieldError::NonASCIIRow(name.to_string()));
+            return Err(DataFieldError::NonASCIIRow(row_def.name.to_string()));
         }
 
-        let raw = row[start_idx..end_idx].to_string();
-        let data = post_fn(raw.trim().to_string())?;
+        let raw = row[row_def.start_idx..end_idx].to_string();
+        let data = (row_def.post_process)(raw.trim().to_string())?;
 
 
         Ok(DataField {
-            name: name.to_string(),
+            name: row_def.name.to_string(),
             raw,
             data: if data.len() == 0 {
                 None

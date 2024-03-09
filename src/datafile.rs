@@ -1,6 +1,6 @@
 use std::fs;
 use std::path::Path;
-use crate::datarow::DataRow;
+use crate::datarow::{DataRow, DataRowDef};
 use crate::loadwarning::LoadWarning;
 
 #[derive(Debug)]
@@ -18,7 +18,7 @@ pub enum DataFileError {
 type Result<T> = std::result::Result<T, DataFileError>;
 
 impl DataFile {
-    pub fn try_load(path: &Path) -> Result<DataFile> {
+    pub fn try_load(path: &Path, row_defs: &Vec<DataRowDef>) -> Result<DataFile> {
         let data = fs::read_to_string(path);
         if let Err(e) = data {
             return Err(DataFileError::FileError(e))
@@ -33,7 +33,7 @@ impl DataFile {
         let mut load_warnings: Vec<LoadWarning> = vec![];
 
         for (row_num, row) in data.lines().enumerate() {
-            match DataRow::try_create(row) {
+            match DataRow::try_create(row, row_defs) {
                 Ok(r) => rows.push(r),
                 Err(e) => load_warnings.push(LoadWarning::new(row_num, e))
             }
