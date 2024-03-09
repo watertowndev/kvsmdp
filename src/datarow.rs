@@ -34,7 +34,8 @@ pub struct DataRow {
 #[derive(Debug)]
 pub enum DataRowError {
     FieldError(DataFieldError),
-    BadRowLength(usize)
+    BadRowLength(usize),
+    FieldNameNotFound(String)
 }
 
 impl From<DataFieldError> for DataRowError {
@@ -80,5 +81,21 @@ impl DataRow {
         Ok(DataRow {
             row: fields
         })
+    }
+
+    /// Get a copy of the row with specified fields in order
+    pub fn get_ordered_fields(&self, field_list: &Vec<&str>) -> Result<Vec<DataField>, DataRowError>{
+        let mut list = vec![];
+
+        for f in field_list {
+            if let Some(c) = self.row.iter().find(|n| n.name() == f) {
+                list.push((*c).clone());
+            }
+            else {
+                return Err(DataRowError::FieldNameNotFound(f.to_string()));
+            }
+        }
+
+        Ok(list)
     }
 }

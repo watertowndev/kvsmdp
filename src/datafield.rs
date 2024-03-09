@@ -1,5 +1,5 @@
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct DataField {
     name: String,
     raw: String,
@@ -20,18 +20,38 @@ pub enum DataFieldError {
 type Result<T> = std::result::Result<T, DataFieldError>;
 
 impl DataField {
+    pub fn new(name: &str, data: String) -> DataField {
+        DataField {
+            name: name.to_string(),
+            raw: data.clone(),
+            data: if data.len() == 0 {
+                None
+            } else {
+                Some(data)
+            },
+        }
+    }
+
     pub fn try_from_row(row: &str, name: &str,
                         start_idx: usize, end_idx: usize, post_fn: &dyn Fn(String) -> Result<String>)
                         -> Result<DataField>
     {
         //fields can be optional and result in lines that are short
-        if start_idx > row.len() || end_idx > row.len() {
+        //return nothing if the start is after the row (it's truncated)
+        if start_idx > row.len() {
             return Ok(DataField {
                 name: name.to_string(),
                 raw: "".to_string(),
                 data: None
             });
         }
+
+        let end_idx = if end_idx > row.len() {
+            row.len()
+        }
+        else {
+            end_idx
+        };
 
         if start_idx > end_idx {
             return Err(DataFieldError::StartAfterEnd(name.to_string()));
@@ -54,6 +74,16 @@ impl DataField {
                 Some(data)
             },
         })
+    }
+
+    //Returns a reference to the name.
+    pub fn name(&self) -> &String {
+        &self.name
+    }
+
+    //returns a clone of the data. An empty string is returned if None.
+    pub fn data(&self) -> String {
+        self.data.clone().unwrap_or("".to_string())
     }
 }
 
