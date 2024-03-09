@@ -1,5 +1,5 @@
-use crate::datarow::DataRowDef;
 
+/// Contains a datafield, including name, raw data, and processes data (if any).
 #[derive(Debug, Clone)]
 pub struct DataField {
     name: String,
@@ -7,6 +7,7 @@ pub struct DataField {
     data: Option<String>
 }
 
+/// Errors that DataFields may encounter.
 #[derive(Debug)]
 pub enum DataFieldError {
     StartAfterEnd(String),
@@ -19,6 +20,26 @@ pub enum DataFieldError {
 }
 
 type Result<T> = std::result::Result<T, DataFieldError>;
+
+/// Holds details pertaining to the structure of a row and the desired post-processing function.
+pub struct DataFieldDef<'a> {
+    pub(crate) name: String,
+    pub(crate) start_idx: usize,
+    pub(crate) end_idx: usize,
+    pub(crate) post_process: &'a dyn Fn(String) -> Result<String>
+}
+
+impl DataFieldDef<'_> {
+    pub fn new(name: impl ToString, start_idx: usize, end_idx: usize,
+               post_process: &dyn Fn(String)-> Result<String>) -> DataFieldDef {
+        DataFieldDef {
+            name: name.to_string(),
+            start_idx,
+            end_idx,
+            post_process
+        }
+    }
+}
 
 impl DataField {
     pub fn new(name: &str, data: String) -> DataField {
@@ -33,39 +54,40 @@ impl DataField {
         }
     }
 
-    pub fn try_from_str(row: &str, row_def: &DataRowDef) -> Result<DataField>
+    ///Try to create a DataField from a row using the provided data field definition.
+    pub fn try_from_row(row: &str, field_def: &DataFieldDef) -> Result<DataField>
     {
         //fields can be optional and result in lines that are short
         //return nothing if the start is after the row (it's truncated)
-        if row_def.start_idx > row.len() {
+        if field_def.start_idx > row.len() {
             return Ok(DataField {
-                name: row_def.name.to_string(),
+                name: field_def.name.to_string(),
                 raw: "".to_string(),
                 data: None
             });
         }
 
-        let end_idx = if row_def.end_idx > row.len() {
+        let end_idx = if field_def.end_idx > row.len() {
             row.len()
         }
         else {
-            row_def.end_idx
+            field_def.end_idx
         };
 
-        if row_def.start_idx > end_idx {
-            return Err(DataFieldError::StartAfterEnd(row_def.name.to_string()));
+        if field_def.start_idx > end_idx {
+            return Err(DataFieldError::StartAfterEnd(field_def.name.to_string()));
         }
 
         if !row.is_ascii() {
-            return Err(DataFieldError::NonASCIIRow(row_def.name.to_string()));
+            return Err(DataFieldError::NonASCIIRow(field_def.name.to_string()));
         }
 
-        let raw = row[row_def.start_idx..end_idx].to_string();
-        let data = (row_def.post_process)(raw.trim().to_string())?;
+        let raw = row[field_def.start_idx..end_idx].to_string();
+        let data = (field_def.post_process)(raw.trim().to_string())?;
 
 
         Ok(DataField {
-            name: row_def.name.to_string(),
+            name: field_def.name.to_string(),
             raw,
             data: if data.len() == 0 {
                 None
@@ -86,8 +108,9 @@ impl DataField {
     }
 }
 
-/// Check that account starts with appropriate numbers
+/// Check that the account starts with appropriate numbers
 /// and that it isn't excluded intentionally.
+/// Todo: this is datafile specific and should be extracted elsewhere.
 pub fn validate_acct(value: String) -> Result<String> {
     let acct = cleanup(value)?;
     if acct.len() < 10 {
@@ -106,6 +129,7 @@ pub fn validate_acct(value: String) -> Result<String> {
 
 /// Remove whitespace from the beginning and end of value.
 /// Converts ampersands to 'and' and commas to spaces.
+/// Todo: this is datafile specific and should be extracted elsewhere.
 pub fn cleanup(value: String) -> Result<String> {
     if value.contains("\"") {
         Err(DataFieldError::FieldContainsQuote)
@@ -116,6 +140,7 @@ pub fn cleanup(value: String) -> Result<String> {
 }
 
 /// Normalize the PrintKey value.
+/// Todo: this is datafile specific and should be extracted elsewhere.
 pub fn fix_printkey(value: String) -> Result<String> {
     let printkey = cleanup(value)?;
     let mut npk: String;
@@ -140,6 +165,7 @@ pub fn fix_printkey(value: String) -> Result<String> {
 }
 
 /// Convert the size reading or code into a normalized value.
+/// Todo: this is datafile specific and should be extracted elsewhere.
 pub fn fix_meter_size(value: String) -> Result<String> {
     let meter_size = cleanup(value)?;
     match meter_size.as_str() {
@@ -157,6 +183,7 @@ pub fn fix_meter_size(value: String) -> Result<String> {
 }
 
 /// Decode the Special value into expanded terms.
+/// Todo: this is datafile specific and should be extracted elsewhere.
 pub fn decode_special(value: String) -> Result<String> {
     let special = cleanup(value)?;
     match special.as_str() {
@@ -171,6 +198,7 @@ pub fn decode_special(value: String) -> Result<String> {
 
 /// Trim leading zeroes. Will erase all zeroes if nothing else is present.
 /// On failure or negative, returns an Ok(empty string).
+/// Todo: this is datafile specific and should be extracted elsewhere.
 pub fn trim_zeroes(value: String) -> Result<String> {
     let num = value.parse::<u32>();
 

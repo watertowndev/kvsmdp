@@ -1,6 +1,7 @@
 use std::fs;
 use std::path::Path;
-use crate::datarow::{DataRow, DataRowDef};
+use crate::datafield::DataFieldDef;
+use crate::datarow::DataRow;
 use crate::loadwarning::LoadWarning;
 
 #[derive(Debug)]
@@ -18,7 +19,7 @@ pub enum DataFileError {
 type Result<T> = std::result::Result<T, DataFileError>;
 
 impl DataFile {
-    pub fn try_load(path: &Path, row_defs: &Vec<DataRowDef>) -> Result<DataFile> {
+    pub fn try_load(path: &Path, row_defs: &Vec<DataFieldDef>) -> Result<DataFile> {
         let data = fs::read_to_string(path);
         if let Err(e) = data {
             return Err(DataFileError::FileError(e))

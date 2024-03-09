@@ -23,31 +23,15 @@ Original specification from the previous version of this utility:
     ("MeterSize", {"width": 1, "padding": 5, "handler": decodeSizes}),  # PIPE SIZE
     ("Special", {"width": 1, "padding": 4, "handler": decodeSpecial})  # USER2 (special status flag
  */
-use crate::datafield::{DataField, DataFieldError};
+use crate::datafield::{DataField, DataFieldDef, DataFieldError};
 
+/// Holds a list of the fields found in a row.
 #[derive(Debug)]
 pub struct DataRow {
     row: Vec<DataField>
 }
 
-pub struct DataRowDef<'a> {
-    pub(crate) name: String,
-    pub(crate) start_idx: usize,
-    pub(crate) end_idx: usize,
-    pub(crate) post_process: &'a dyn Fn(String) -> Result<String, DataFieldError>
-}
 
-impl DataRowDef<'_> {
-    pub fn new(name: impl ToString, start_idx: usize, end_idx: usize,
-               post_process: &dyn Fn(String)-> Result<String, DataFieldError>) -> DataRowDef {
-        DataRowDef {
-            name: name.to_string(),
-            start_idx,
-            end_idx,
-            post_process
-        }
-    }
-}
 
 #[derive(Debug)]
 pub enum DataRowError {
@@ -65,19 +49,18 @@ impl From<DataFieldError> for DataRowError {
 impl DataRow {
     const MINIMUM_LENGTH: usize = 183;
 
-    pub fn try_create(row: &str, row_defs: &Vec<DataRowDef>) -> Result<DataRow, DataRowError> {
+    /// Try to create a DataRow structure using the definitions provided.
+    pub fn try_create(row: &str, row_defs: &Vec<DataFieldDef>) -> Result<DataRow, DataRowError> {
         if row.len() < Self::MINIMUM_LENGTH {
             return Err(DataRowError::BadRowLength(row.len()))
         }
 
-        let tfs = DataField::try_from_str;
+        let tfs = DataField::try_from_row;
         let mut fields = Vec::new();
 
         for row_def in row_defs {
             fields.push(tfs(row, row_def)?);
         }
-
-        //well that was tedious (╯°□°）╯︵ ┻━┻
 
         Ok(DataRow {
             row: fields
