@@ -1,5 +1,5 @@
 use std::fmt::{Display, Formatter};
-use crate::ffreader::{DataField, DataFieldDef, DataFieldError};
+use crate::{DataField, DataFieldDef, DataFieldError};
 
 /// Holds a list of the fields found in a row.
 #[derive(Debug)]

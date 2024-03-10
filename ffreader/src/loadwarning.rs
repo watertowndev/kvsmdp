@@ -1,5 +1,5 @@
 use std::fmt::{Display, Formatter};
-use crate::ffreader::DataRowError;
+use crate::DataRowError;
 
 //Simple structure for storing a single warning/error and displaying it.
 pub struct LoadWarning {

@@ -5,8 +5,8 @@ use std::io::Write;
 
 use clap::{arg, command, value_parser};
 
-use kvsmdp::ffreader::DataFieldDef;
-use kvsmdp::ffreader::DataFile;
+use ffreader::DataFieldDef;
+use ffreader::DataFile;
 
 mod posthelp;
 

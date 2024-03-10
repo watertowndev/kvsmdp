@@ -16,3 +16,10 @@ The data library components are intended to be sufficiently generic that they ma
     <logfile>    Log file to write to
 Output files are overwritten if they exist.
 
+## License
+This application and library is MIT licensed. See LICENSE.md for details.
+
+## Roadmap
+Some of the things that need to be done soon.
+- Improve library documentation
+- Create library tests

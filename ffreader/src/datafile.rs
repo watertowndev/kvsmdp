@@ -1,8 +1,8 @@
 use std::fs;
 use std::path::Path;
-use crate::ffreader::DataFieldDef;
-use crate::ffreader::DataRow;
-use crate::ffreader::LoadWarning;
+use crate::DataFieldDef;
+use crate::DataRow;
+use crate::LoadWarning;
 
 pub struct DataFile {
     rows: Vec<DataRow>,

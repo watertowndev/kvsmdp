@@ -1,0 +1,8 @@
+[package]
+name = "ffreader"
+description = "Flat File Reader Utility Library"
+authors = ["Maxwell French <maxwell@frenchnet.org"]
+repository = "https://github.com/watertowndev/kvsmdp"
+license = "MIT"
+version = "0.1.0"
+edition = "2021"
