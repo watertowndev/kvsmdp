@@ -1,10 +1,22 @@
 [package]
 name = "kvsmdp"
+description = "KVS/CQ-generated Meter Data Processing Utility"
+authors = ["Maxwell French <mfrench@watertown-ny.gov>"]
 version = "0.1.0"
 edition = "2021"
+build = "build.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 clap = { version="4.5.2", features=["cargo"]}
 chrono = "0.4.35"
+
+[build-dependencies]
+winresource = "0.1.17"
+
+
+[package.metadata.winresource]
+OriginalFilename = "KVSMDP.EXE"
+LegalCopyright = "Copyright © 2024 Maxwell French"
+FileDescription = "KVS/CQ-Generated Meter Data Processing Utility"

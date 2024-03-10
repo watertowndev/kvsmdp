@@ -11,6 +11,7 @@ use kvsmdp::datafile::DataFile;
 mod posthelp;
 
 fn main() -> Result<(), Box<dyn Error>> {
+
     let matches = command!()
         .arg(arg!(<inputfile> "Input file to process").value_parser(value_parser!(PathBuf)))
         .arg(arg!(<outputfile> "Output file to create").value_parser(value_parser!(PathBuf)))
