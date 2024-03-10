@@ -28,7 +28,7 @@ use crate::datafield::{DataField, DataFieldDef, DataFieldError};
 /// Holds a list of the fields found in a row.
 #[derive(Debug)]
 pub struct DataRow {
-    row: Vec<DataField>
+    fields: Vec<DataField>
 }
 
 
@@ -63,7 +63,7 @@ impl DataRow {
         }
 
         Ok(DataRow {
-            row: fields
+            fields
         })
     }
 
@@ -72,7 +72,7 @@ impl DataRow {
         let mut list = vec![];
 
         for f in field_list {
-            if let Some(c) = self.row.iter().find(|n| n.name() == f) {
+            if let Some(c) = self.fields.iter().find(|n| n.name() == f) {
                 list.push((*c).clone());
             }
             else {
@@ -81,5 +81,10 @@ impl DataRow {
         }
 
         Ok(list)
+    }
+
+    /// Get a reference to the DataFields contained in the struct.
+    pub fn fields(&self) -> &Vec<DataField> {
+        &self.fields
     }
 }

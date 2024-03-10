@@ -46,11 +46,31 @@ impl DataFile {
         })
     }
 
+    /// Get a reference to the rows contained in the DataFile.
     pub fn rows(&self) -> &Vec<DataRow> {
         &self.rows
     }
 
+    /// Get a reference to the list of warnings generated during creation.
     pub fn warnings(&self) -> &Vec<LoadWarning> {
         &self.load_warnings
+    }
+
+    /// Generator a json version of the data
+    /// This function works for this specific data; no guarantees elsewhere.
+    pub fn jsonify(&self) -> String {
+        let mut json_row_list = vec![];
+        for row in &self.rows {
+            let mut json_row = String::from("{");
+            let mut kv_list = vec![];
+            for field in row.fields() {
+                kv_list.push(format!("\"{}\": \"{}\"", field.name(), field.data()));
+            }
+            json_row.push_str(kv_list.join(",").as_str());
+            json_row.push('}');
+            json_row_list.push(json_row);
+        }
+
+        format!("[{}]", json_row_list.join(",\n"))
     }
 }

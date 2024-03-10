@@ -14,12 +14,14 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let matches = command!()
         .arg(arg!(<inputfile> "Input file to process").value_parser(value_parser!(PathBuf)))
-        .arg(arg!(<outputfile> "Output file to create").value_parser(value_parser!(PathBuf)))
+        .arg(arg!(<csvfile> "Output CSV file to create").value_parser(value_parser!(PathBuf)))
+        .arg(arg!(<jsonfile> "Output JSON file to create").value_parser(value_parser!(PathBuf)))
         .arg(arg!(<logfile> "Log file to write to").value_parser(value_parser!(PathBuf)))
         .get_matches();
 
     let input_file = matches.get_one::<PathBuf>("inputfile").expect("Input file is required.");
-    let output_file = matches.get_one::<PathBuf>("outputfile").expect("Output file is required.");
+    let csv_file = matches.get_one::<PathBuf>("csvfile").expect("Output file is required.");
+    let json_file = matches.get_one::<PathBuf>("jsonfile").expect("Output file is required.");
     let log_file = matches.get_one::<PathBuf>("logfile").expect("Log file is required.");
 
     let row_defs = vec![
@@ -82,10 +84,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("Found {} rows with {} warnings along the way, resulting in {} output rows.",
              f.rows().len(), f.warnings().len(), csv_rows.len());
 
-    let outfile = File::create(output_file)?;
+    let outfile_csv = File::create(csv_file)?;
     for row in csv_rows {
-        writeln!(&outfile, "{}", row)?;
+        writeln!(&outfile_csv, "{}", row)?;
     }
+
+    let outfile_json = File::create(json_file)?;
+    write!(&outfile_json, "{}", f.jsonify())?;
 
     let logfile = File::create(log_file)?;
     for w in f.warnings() {
@@ -95,4 +100,6 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
+
+
 

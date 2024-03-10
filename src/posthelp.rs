@@ -23,7 +23,7 @@ pub fn validate_acct(value: String) -> datafield::Result<String> {
 /// Converts ampersands to 'and' and commas to spaces.
 pub fn cleanup(value: String) -> datafield::Result<String> {
     if value.contains("\"") {
-        Err(DataFieldError::FieldContainsQuote)
+        Err(DataFieldError::FieldContainsQuote(value))
     }
     else {
         Ok(value.trim().replace("&", "and").replace(",", " "))
@@ -70,6 +70,7 @@ pub fn fix_meter_size(value: String) -> datafield::Result<String> {
         "4" => Ok("4".to_string()),
         "6" => Ok("6".to_string()),
         "8" => Ok("8".to_string()),
+        ""  => Ok("".to_string()),
         _ => Err(DataFieldError::InvalidMeterSize(meter_size))
     }
 }
