@@ -3,6 +3,7 @@ name = "kvsmdp"
 description = "KVS/CQ-Generated Meter Data Processing Utility"
 authors = ["Maxwell French <mfrench@watertown-ny.gov>"]
 repository = "https://github.com/watertowndev/kvsmdp"
+license = "MIT"
 version = "0.1.0"
 edition = "2021"
 build = "build.rs"
