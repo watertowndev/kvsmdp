@@ -16,7 +16,7 @@ pub enum DataFieldError {
     InvalidMeterSize(String),
     InvalidSpecialCode(String),
     BadNumber(String),
-    FieldContainsQuote
+    FieldContainsQuote(String)
 }
 
 pub type Result<T> = std::result::Result<T, DataFieldError>;
@@ -85,6 +85,9 @@ impl DataField {
         let raw = row[field_def.start_idx..end_idx].to_string();
         let data = (field_def.post_process)(raw.trim().to_string())?;
 
+        if data.contains("\"") {
+            return Err(DataFieldError::FieldContainsQuote(data));
+        }
 
         Ok(DataField {
             name: field_def.name.to_string(),
