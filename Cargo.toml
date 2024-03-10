@@ -1,7 +1,8 @@
 [package]
 name = "kvsmdp"
-description = "KVS/CQ-generated Meter Data Processing Utility"
+description = "KVS/CQ-Generated Meter Data Processing Utility"
 authors = ["Maxwell French <mfrench@watertown-ny.gov>"]
+repository = "https://github.com/watertowndev/kvsmdp"
 version = "0.1.0"
 edition = "2021"
 build = "build.rs"
@@ -17,6 +18,6 @@ winresource = "0.1.17"
 
 
 [package.metadata.winresource]
-OriginalFilename = "KVSMDP.EXE"
+OriginalFilename = "kvsmdp.exe"
 LegalCopyright = "Copyright © 2024 Maxwell French"
 FileDescription = "KVS/CQ-Generated Meter Data Processing Utility"

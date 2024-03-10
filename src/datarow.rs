@@ -23,6 +23,7 @@ Original specification from the previous version of this utility:
     ("MeterSize", {"width": 1, "padding": 5, "handler": decodeSizes}),  # PIPE SIZE
     ("Special", {"width": 1, "padding": 4, "handler": decodeSpecial})  # USER2 (special status flag
  */
+use std::fmt::{Display, Formatter};
 use crate::datafield::{DataField, DataFieldDef, DataFieldError};
 
 /// Holds a list of the fields found in a row.
@@ -31,13 +32,21 @@ pub struct DataRow {
     fields: Vec<DataField>
 }
 
-
-
-#[derive(Debug)]
 pub enum DataRowError {
     FieldError(DataFieldError),
     BadRowLength(usize),
     FieldNameNotFound(String)
+}
+
+impl Display for DataRowError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
+            DataRowError::FieldError(fe) => fe.to_string(),
+            DataRowError::BadRowLength(l) => format!("Bad Row Length ({})", l),
+            DataRowError::FieldNameNotFound(n) => format!("Field Name Not Found ({})", n)
+        };
+        write!(f, "{}", s)
+    }
 }
 
 impl From<DataFieldError> for DataRowError {

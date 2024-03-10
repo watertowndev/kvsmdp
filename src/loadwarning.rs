@@ -2,7 +2,6 @@ use std::fmt::{Display, Formatter};
 use crate::datarow::DataRowError;
 
 //Simple structure for storing a single warning/error and displaying it.
-#[derive(Debug)]
 pub struct LoadWarning {
     line_index: usize,
     message: DataRowError
@@ -19,6 +18,6 @@ impl LoadWarning {
 
 impl Display for LoadWarning {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Row {} {:?}", self.line_index, self.message)
+        write!(f, "Line {} {}", self.line_index + 1, self.message)
     }
 }

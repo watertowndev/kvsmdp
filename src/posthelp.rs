@@ -1,20 +1,37 @@
+use std::fmt::{Display, Formatter};
 use kvsmdp::datafield;
 use kvsmdp::datafield::DataFieldError;
+
+pub enum PostError{
+    InvalidOrExcludedAccountID(String),
+    InvalidMeterSize(String),
+    InvalidSpecialCode(String,)
+}
+impl Display for PostError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
+            PostError::InvalidOrExcludedAccountID(a) => format!("Invalid or Excluded Account ID ({})", a),
+            PostError::InvalidMeterSize(m) => format!("Invalid Meter Size ({})", m),
+            PostError::InvalidSpecialCode(c) => format!("Invalid Special Code ({}):", c),
+        };
+        write!(f, "{}", s)
+    }
+}
 
 /// Check that the account starts with appropriate numbers
 /// and that it isn't excluded intentionally.
 pub fn validate_acct(value: String) -> datafield::Result<String> {
     let acct = cleanup(value)?;
     if acct.len() < 10 {
-        Err(DataFieldError::InvalidOrExcludedAccountID(acct))
+        Err(DataFieldError::Problem(Box::new(PostError::InvalidOrExcludedAccountID(acct))))
     }
     else if acct.starts_with("54777") {
-        Err(DataFieldError::InvalidOrExcludedAccountID(acct))
+        Err(DataFieldError::Problem(Box::new(PostError::InvalidOrExcludedAccountID(acct))))
     }
     else {
         match &acct[0..2] {
             "51" | "52" | "53" | "54" => Ok(acct),
-            _ => Err(DataFieldError::InvalidOrExcludedAccountID(acct))
+            _ => Err(DataFieldError::Problem(Box::new(PostError::InvalidOrExcludedAccountID(acct))))
         }
     }
 }
@@ -71,7 +88,7 @@ pub fn fix_meter_size(value: String) -> datafield::Result<String> {
         "6" => Ok("6".to_string()),
         "8" => Ok("8".to_string()),
         ""  => Ok("".to_string()),
-        _ => Err(DataFieldError::InvalidMeterSize(meter_size))
+        _ => Err(DataFieldError::Problem(Box::new(PostError::InvalidMeterSize(meter_size))))
     }
 }
 
@@ -84,7 +101,7 @@ pub fn decode_special(value: String) -> datafield::Result<String> {
         "X" => Ok("Exempt".to_string()),
         "O" => Ok("Outside User".to_string()),
         "R" => Ok("Removed".to_string()),
-        _ => Err(DataFieldError::InvalidSpecialCode(special))
+        _ => Err(DataFieldError::Problem(Box::new(PostError::InvalidSpecialCode(special))))
     }
 }
 

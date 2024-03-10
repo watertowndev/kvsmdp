@@ -76,9 +76,10 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let mut csv_rows = vec![];
     for r in f.rows() {
-        let ordfields = r.get_ordered_fields(&output_fields).unwrap();
-        let csvrow = ordfields.iter().map(|ff| ff.data()).collect::<Vec<String>>().join(",");
-        csv_rows.push(csvrow);
+        if let Ok(ordfields) = r.get_ordered_fields(&output_fields) {
+            let csvrow = ordfields.iter().map(|ff| ff.data()).collect::<Vec<String>>().join(",");
+            csv_rows.push(csvrow);
+        }
     }
 
     println!("Found {} rows with {} warnings along the way, resulting in {} output rows.",
@@ -95,7 +96,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let logfile = File::create(log_file)?;
     for w in f.warnings() {
         let ts = chrono::Local::now();
-        writeln!(&logfile, "{} {:?}", ts.format("%Y-%m-%d %H:%M:%S %Z"), w)?;
+        writeln!(&logfile, "{} {}", ts.format("%Y-%m-%d %H:%M:%S %Z"), w)?;
     }
 
     Ok(())

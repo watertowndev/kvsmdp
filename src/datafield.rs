@@ -1,3 +1,4 @@
+use std::fmt::{Display, Formatter};
 
 /// Contains a datafield, including name, raw data, and processes data (if any).
 #[derive(Debug, Clone)]
@@ -8,15 +9,23 @@ pub struct DataField {
 }
 
 /// Errors that DataFields may encounter.
-#[derive(Debug)]
 pub enum DataFieldError {
     StartAfterEnd(String),
-    NonASCIIRow(String),
-    InvalidOrExcludedAccountID(String),
-    InvalidMeterSize(String),
-    InvalidSpecialCode(String),
-    BadNumber(String),
+    NonASCII(String),
+    Problem(Box<dyn ToString>),
     FieldContainsQuote(String)
+}
+
+impl Display for DataFieldError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
+            DataFieldError::StartAfterEnd(i) => format!("Start index is after end ({})", i),
+            DataFieldError::NonASCII(f) => format!("Non ASCII ({})", f),
+            DataFieldError::Problem(p) =>  format!("Problem: {}", p.to_string()),
+            DataFieldError::FieldContainsQuote(f) => format!("Field contains quote ({})", f)
+        };
+        write!(f, "{}", s)
+    }
 }
 
 pub type Result<T> = std::result::Result<T, DataFieldError>;
@@ -79,7 +88,7 @@ impl DataField {
         }
 
         if !row.is_ascii() {
-            return Err(DataFieldError::NonASCIIRow(field_def.name.to_string()));
+            return Err(DataFieldError::NonASCII(field_def.name.to_string()));
         }
 
         let raw = row[field_def.start_idx..end_idx].to_string();

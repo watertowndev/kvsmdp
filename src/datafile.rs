@@ -4,7 +4,6 @@ use crate::datafield::DataFieldDef;
 use crate::datarow::DataRow;
 use crate::loadwarning::LoadWarning;
 
-#[derive(Debug)]
 pub struct DataFile {
     rows: Vec<DataRow>,
     load_warnings: Vec<LoadWarning>
