@@ -5,20 +5,20 @@ use crate::datarow::DataRowError;
 #[derive(Debug)]
 pub struct LoadWarning {
     row_num: usize,
-    warning: DataRowError
+    message: DataRowError
 }
 
 impl LoadWarning {
     pub fn new(row_num: usize, warning: DataRowError) -> LoadWarning {
         LoadWarning {
             row_num,
-            warning
+            message: warning
         }
     }
 }
 
 impl Display for LoadWarning {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Row {} {:?}", self.row_num, self.warning)
+        write!(f, "Row {} {:?}", self.row_num, self.message)
     }
 }

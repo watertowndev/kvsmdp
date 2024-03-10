@@ -34,7 +34,10 @@ pub fn cleanup(value: String) -> datafield::Result<String> {
 pub fn fix_printkey(value: String) -> datafield::Result<String> {
     let printkey = cleanup(value)?;
     let mut npk: String;
-    if printkey.len() == "0-0000-000.000".len() {
+    if printkey.contains("NOT") {
+        Ok(printkey)
+    }
+    else if printkey.len() == "0-0000-000.000".len() {
         npk = printkey[0..2].to_string();
         npk.push_str(&printkey[4..]);
         Ok(npk)

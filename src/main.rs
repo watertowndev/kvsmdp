@@ -78,12 +78,18 @@ fn main() -> Result<(), Box<dyn Error>> {
         csv_rows.push(csvrow);
     }
 
-    println!("Found {} rows with {} warnings along the way, resulting in {} CSV rows.",
+    println!("Found {} rows with {} warnings along the way, resulting in {} output rows.",
              f.rows().len(), f.warnings().len(), csv_rows.len());
 
     let outfile = File::create(output_file)?;
     for row in csv_rows {
         writeln!(&outfile, "{}", row)?;
+    }
+
+    let logfile = File::create(log_file)?;
+    for w in f.warnings() {
+        let ts = chrono::Local::now();
+        writeln!(&logfile, "{} {:?}", ts.format("%Y-%m-%d %H:%M:%S %Z"), w)?;
     }
 
     Ok(())
