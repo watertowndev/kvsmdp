@@ -5,8 +5,8 @@ use std::io::Write;
 
 use clap::{arg, command, value_parser};
 
-use kvsmdp::datafield::DataFieldDef;
-use kvsmdp::datafile::DataFile;
+use kvsmdp::ffreader::DataFieldDef;
+use kvsmdp::ffreader::DataFile;
 
 mod posthelp;
 
@@ -47,9 +47,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         DataFieldDef::new("MeterSize", 231, 237, &posthelp::fix_meter_size),
         DataFieldDef::new("Special", 237, 242, &posthelp::decode_special),
     ];
-    let f = DataFile::try_load(input_file, &row_defs).unwrap();
+    let data_file = DataFile::try_load(input_file, &row_defs).unwrap();
 
-    println!("{} entries, {} warnings", f.rows().len(), f.warnings().len());
     let output_fields = vec![
         "AccountNo1",
         "CyclNo1",
@@ -75,7 +74,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     ];
 
     let mut csv_rows = vec![];
-    for r in f.rows() {
+    for r in data_file.rows() {
         if let Ok(ordfields) = r.get_ordered_fields(&output_fields) {
             let csvrow = ordfields.iter().map(|ff| ff.data()).collect::<Vec<String>>().join(",");
             csv_rows.push(csvrow);
@@ -83,7 +82,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
 
     println!("Found {} rows with {} warnings along the way, resulting in {} output rows.",
-             f.rows().len(), f.warnings().len(), csv_rows.len());
+             data_file.rows().len(), data_file.warnings().len(), csv_rows.len());
+    println!("Check log file for details.");
 
     let outfile_csv = File::create(csv_file)?;
     for row in csv_rows {
@@ -91,10 +91,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
 
     let outfile_json = File::create(json_file)?;
-    write!(&outfile_json, "{}", f.jsonify())?;
+    write!(&outfile_json, "{}", data_file.jsonify())?;
 
     let logfile = File::create(log_file)?;
-    for w in f.warnings() {
+    for w in data_file.warnings() {
         let ts = chrono::Local::now();
         writeln!(&logfile, "{} {}", ts.format("%Y-%m-%d %H:%M:%S %Z"), w)?;
     }

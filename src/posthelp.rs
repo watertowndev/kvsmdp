@@ -1,6 +1,5 @@
 use std::fmt::{Display, Formatter};
-use kvsmdp::datafield;
-use kvsmdp::datafield::DataFieldError;
+use kvsmdp::ffreader::{DataFieldError, DataFieldResult};
 
 pub enum PostError{
     InvalidOrExcludedAccountID(String),
@@ -20,7 +19,7 @@ impl Display for PostError {
 
 /// Check that the account starts with appropriate numbers
 /// and that it isn't excluded intentionally.
-pub fn validate_acct(value: String) -> datafield::Result<String> {
+pub fn validate_acct(value: String) -> DataFieldResult<String> {
     let acct = cleanup(value)?;
     if acct.len() < 10 {
         Err(DataFieldError::Problem(Box::new(PostError::InvalidOrExcludedAccountID(acct))))
@@ -38,7 +37,7 @@ pub fn validate_acct(value: String) -> datafield::Result<String> {
 
 /// Remove whitespace from the beginning and end of value.
 /// Converts ampersands to 'and' and commas to spaces.
-pub fn cleanup(value: String) -> datafield::Result<String> {
+pub fn cleanup(value: String) -> DataFieldResult<String> {
     if value.contains("\"") {
         Err(DataFieldError::FieldContainsQuote(value))
     }
@@ -48,7 +47,7 @@ pub fn cleanup(value: String) -> datafield::Result<String> {
 }
 
 /// Normalize the PrintKey value.
-pub fn fix_printkey(value: String) -> datafield::Result<String> {
+pub fn fix_printkey(value: String) -> DataFieldResult<String> {
     let printkey = cleanup(value)?;
     let mut npk: String;
     if printkey.contains("NOT") {
@@ -75,7 +74,7 @@ pub fn fix_printkey(value: String) -> datafield::Result<String> {
 }
 
 /// Convert the size reading or code into a normalized value.
-pub fn fix_meter_size(value: String) -> datafield::Result<String> {
+pub fn fix_meter_size(value: String) -> DataFieldResult<String> {
     let meter_size = cleanup(value)?;
     match meter_size.as_str() {
         "0" | "0.625" => Ok("0.625".to_string()),
@@ -93,7 +92,7 @@ pub fn fix_meter_size(value: String) -> datafield::Result<String> {
 }
 
 /// Decode the Special value into expanded terms.
-pub fn decode_special(value: String) -> datafield::Result<String> {
+pub fn decode_special(value: String) -> DataFieldResult<String> {
     let special = cleanup(value)?;
     match special.as_str() {
         "S" => Ok("Shut".to_string()),
@@ -107,7 +106,7 @@ pub fn decode_special(value: String) -> datafield::Result<String> {
 
 /// Trim leading zeroes. Will erase all zeroes if nothing else is present.
 /// On failure or negative, returns an Ok(empty string).
-pub fn trim_zeroes(value: String) -> datafield::Result<String> {
+pub fn trim_zeroes(value: String) -> DataFieldResult<String> {
     let num = value.parse::<u32>();
 
     match num {
