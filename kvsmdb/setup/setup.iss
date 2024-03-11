@@ -23,7 +23,7 @@ LicenseFile=..\..\LICENSE.md
 InfoAfterFile=..\..\README.md
 ; Uncomment the following line to run in non administrative install mode (install for current user only.)
 ;PrivilegesRequired=lowest
-OutputDir=Output
+OutputDir=..\..\target\setup
 OutputBaseFilename=kvsmdp_setup_v{#MyAppVersion}
 SetupIconFile=..\scadadrop.ico
 Compression=lzma
