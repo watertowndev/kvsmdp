@@ -1,4 +1,4 @@
-use std::fmt::{Display, Formatter};
+use std::fmt::{Debug, Display, Formatter};
 
 /// Contains a datafield, including name, raw data, and processes data (if any).
 #[derive(Debug, Clone)]
@@ -28,6 +28,12 @@ impl Display for DataFieldError {
     }
 }
 
+impl Debug for DataFieldError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.to_string())
+    }
+}
+
 pub type Result<T> = std::result::Result<T, DataFieldError>;
 
 /// Holds details pertaining to the structure of a row and the desired post-processing function.
@@ -52,6 +58,8 @@ impl DataFieldDef<'_> {
 
 impl DataField {
     pub fn new(name: &str, data: String) -> DataField {
+        assert!(data.is_ascii());
+        assert!(!data.contains("\""));
         DataField {
             name: name.to_string(),
             raw: data.clone(),
@@ -122,5 +130,71 @@ impl DataField {
     //returns a reference to the raw data.
     pub fn raw(&self) -> &String {
         &self.raw
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    fn echo_ok(s: String) -> Result<String> {
+        Ok(s)
+    }
+
+    #[test]
+    fn non_ascii_caught() {
+        let test_row = String::from("(╯°□°）╯︵ ┻━┻");
+        let def = DataFieldDef::new("testname", 0, test_row.len(), &echo_ok);
+
+        let r = DataField::try_from_row(&test_row, &def);
+        match r.unwrap_err() {
+            DataFieldError::NonASCII(_) => {}
+            _ => panic!()
+        }
+    }
+
+    #[test]
+    fn stray_quote_caught() {
+        let test_row = String::from("test \" quote");
+        let def = DataFieldDef::new("testname", 0, test_row.len(), &echo_ok);
+
+        let r = DataField::try_from_row(&test_row, &def);
+        match r.unwrap_err() {
+            DataFieldError::FieldContainsQuote(_) => {}
+            _ => panic!()
+        }
+    }
+
+    #[test]
+    fn range_checks_work() {
+        let test_row = String::from("test field");
+        let def = DataFieldDef::new("testname", 28, 50, &echo_ok);
+        let r = DataField::try_from_row(&test_row, &def);
+        assert!(r.unwrap().data.is_none());
+
+        let def = DataFieldDef::new("testname", 7, 5, &echo_ok);
+        let r = DataField::try_from_row(&test_row, &def);
+        match r.unwrap_err() {
+            DataFieldError::StartAfterEnd(_) => {}
+            _ => panic!()
+        }
+    }
+
+    #[test]
+    fn fields_extracted() {
+        let test_row = String::from("1234567890  test1 test2  x");
+        let defs = vec![
+            DataFieldDef::new("field1", 0, 10, &echo_ok),
+            DataFieldDef::new("field2", 11, 17, &echo_ok),
+            DataFieldDef::new("field3", 18, 24, &echo_ok),
+            DataFieldDef::new("field4", 25, 27, &echo_ok),
+            ];
+        let fields = vec! [
+            "1234567890", "test1", "test2", "x"
+        ];
+
+        for (def, field) in defs.iter().zip(fields) {
+            let r = DataField::try_from_row(&test_row, &def).unwrap();
+            assert_eq!(r.data.unwrap(), field);
+        }
     }
 }
