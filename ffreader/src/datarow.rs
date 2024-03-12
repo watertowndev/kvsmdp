@@ -1,4 +1,5 @@
-use std::fmt::{Display, Formatter};
+use std::error::Error;
+use std::fmt::{Debug, Display, Formatter};
 use crate::{DataField, DataFieldDef, DataFieldError};
 
 /// Holds a list of the fields found in a row.
@@ -25,6 +26,14 @@ impl Display for DataRowError {
         write!(f, "{}", s)
     }
 }
+
+impl Debug for DataRowError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.to_string())
+    }
+}
+
+impl Error for DataRowError {}
 
 impl From<DataFieldError> for DataRowError {
     fn from(value: DataFieldError) -> Self {

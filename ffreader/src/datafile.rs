@@ -1,5 +1,7 @@
+use std::error::Error;
+use std::fmt::{Display, Formatter};
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use crate::DataFieldDef;
 use crate::DataRow;
 use crate::LoadWarning;
@@ -12,8 +14,20 @@ pub struct DataFile {
 #[derive(Debug)]
 pub enum DataFileError {
     NonASCIIFile,
-    FileError(std::io::Error)
+    FileError(PathBuf, std::io::Error)
 }
+
+impl Display for DataFileError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
+            DataFileError::NonASCIIFile => "Non ASCII file.".to_string(),
+            DataFileError::FileError(p, e) => format!("IO error on {} ({})", p.to_string_lossy(), e.to_string())
+        };
+        write!(f, "Data File Error: {}", s)
+    }
+}
+
+impl Error for DataFileError { }
 
 pub type Result<T> = std::result::Result<T, DataFileError>;
 
@@ -21,7 +35,7 @@ impl DataFile {
     pub fn try_load(path: &Path, row_defs: &Vec<DataFieldDef>) -> Result<DataFile> {
         let data = fs::read_to_string(path);
         if let Err(e) = data {
-            return Err(DataFileError::FileError(e))
+            return Err(DataFileError::FileError(path.into(), e))
         }
         let data = data.unwrap();
 

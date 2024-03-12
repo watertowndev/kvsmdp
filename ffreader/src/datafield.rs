@@ -1,3 +1,4 @@
+use std::error::Error;
 use std::fmt::{Debug, Display, Formatter};
 
 /// Contains a datafield, including name, raw data, and processes data (if any).
@@ -34,14 +35,22 @@ impl Debug for DataFieldError {
     }
 }
 
+impl Error for DataFieldError { }
+
 pub type Result<T> = std::result::Result<T, DataFieldError>;
 
 /// Holds details pertaining to the structure of a row and the desired post-processing function.
 pub struct DataFieldDef<'a> {
-    pub(crate) name: String,
-    pub(crate) start_idx: usize,
-    pub(crate) end_idx: usize,
-    pub(crate) post_process: &'a dyn Fn(String) -> Result<String>
+    pub name: String,
+    pub start_idx: usize,
+    pub end_idx: usize,
+    pub post_process: &'a dyn Fn(String) -> Result<String>
+}
+
+impl Display for DataFieldDef<'_> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}: {}-{} ", self.name, self.start_idx, self.end_idx)
+    }
 }
 
 impl DataFieldDef<'_> {
