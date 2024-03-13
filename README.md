@@ -1,6 +1,8 @@
 # KVSMDP
 Meter Data Processing Utility for converting KVS/CyberQuery-generated fixed-width output files into CSV and JSON files.
 
+Source and binaries available in [the repository](https://github.com/watertowndev/kvsmdp).
+
 ## Purpose
 This utility converts CyberQuery-generated output files into CSV and JSON. 
 
