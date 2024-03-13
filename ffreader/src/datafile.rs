@@ -46,10 +46,10 @@ impl DataFile {
         let mut rows: Vec<DataRow> = vec![];
         let mut load_warnings: Vec<LoadWarning> = vec![];
 
-        for (row_num, row) in data.lines().enumerate() {
+        for (line_index, row) in data.lines().enumerate() {
             match DataRow::try_create(row, row_defs) {
                 Ok(r) => rows.push(r),
-                Err(e) => load_warnings.push(LoadWarning::new(row_num, e))
+                Err(e) => load_warnings.push(LoadWarning::new(line_index, Box::new(e)))
             }
         }
 
