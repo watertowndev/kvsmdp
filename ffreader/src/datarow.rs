@@ -8,12 +8,17 @@ pub struct DataRow {
     fields: Vec<DataField>
 }
 
+/// Errors that DataRows may encounter.
 pub enum DataRowError {
+    /// A field-specific error (contains details).
     FieldError(DataFieldError),
+    /// A row length is out of bounds.
     BadRowLength(usize),
+    /// A field name was specified but not found.
     FieldNameNotFound(String)
 }
 
+/// Convenient Result shorthand for DataRowError results.
 pub type Result<T> = std::result::Result<T, DataRowError>;
 
 impl Display for DataRowError {
@@ -42,7 +47,7 @@ impl From<DataFieldError> for DataRowError {
 }
 
 impl DataRow {
-    const MINIMUM_LENGTH: usize = 183;
+    const MINIMUM_LENGTH: usize = 183; // todo: make this configurable
 
     /// Try to create a DataRow structure using the definitions provided.
     pub fn try_create(row: &str, row_defs: &Vec<DataFieldDef>) -> Result<DataRow> {

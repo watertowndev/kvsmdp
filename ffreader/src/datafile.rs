@@ -6,14 +6,19 @@ use crate::DataFieldDef;
 use crate::DataRow;
 use crate::LoadWarning;
 
+/// Holds a list of DataRows and a list of the LoadWarnings
+/// encountered during creation.
 pub struct DataFile {
     rows: Vec<DataRow>,
     load_warnings: Vec<LoadWarning>
 }
 
+/// Errors that DataFiles may encounter.
 #[derive(Debug)]
 pub enum DataFileError {
+    /// Non-ASCII characters were encountered.
     NonASCIIFile,
+    /// A file I/O error.
     FileError(PathBuf, std::io::Error)
 }
 
@@ -29,9 +34,12 @@ impl Display for DataFileError {
 
 impl Error for DataFileError { }
 
+/// Convenient Result shorthand for DataFileError Results.
 pub type Result<T> = std::result::Result<T, DataFileError>;
 
 impl DataFile {
+    /// Attempt to load a file and parse its rows and fields.
+    /// Non-fatal issues are included in the DataFile as a list of LoadWarnings.
     pub fn try_load(path: &Path, row_defs: &Vec<DataFieldDef>) -> Result<DataFile> {
         let data = fs::read_to_string(path);
         if let Err(e) = data {
