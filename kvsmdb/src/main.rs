@@ -35,7 +35,7 @@ fn go(input_path: &PathBuf, csv_path: &PathBuf, json_path: &PathBuf, logfile: &m
         DataFieldDef::new("MeterSerial", 191, 205, &posthelp::cleanup),
         DataFieldDef::new("PrintKey", 205, 231, &posthelp::fix_printkey),
         DataFieldDef::new("MeterSize", 231, 237, &posthelp::fix_meter_size),
-        DataFieldDef::new("Special", 237, 242, &posthelp::decode_special),
+        DataFieldDef::new("Special", 237, 242, &posthelp::decode_special)
     ];
     writeln!(logfile, "Using data field definitions:")?;
     for field in &field_defs {
