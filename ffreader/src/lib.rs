@@ -1,3 +1,13 @@
+#![warn(missing_docs)]
+//! # ffreader
+//! `ffreader` is a library built to facilitate processing of certain fixed-width
+//! flat text files.
+//!
+//! It includes the following features:
+//! - Field definitions based on column offset.
+//! - Custom post-processing callbacks for each field.
+//! - CSV and JSON output.
+
 mod datafield;
 mod datarow;
 mod datafile;

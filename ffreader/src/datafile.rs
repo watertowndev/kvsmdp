@@ -1,27 +1,49 @@
+use std::error::Error;
+use std::fmt::{Display, Formatter};
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use crate::DataFieldDef;
 use crate::DataRow;
 use crate::LoadWarning;
 
+/// Holds a list of DataRows and a list of the LoadWarnings
+/// encountered during creation.
 pub struct DataFile {
     rows: Vec<DataRow>,
     load_warnings: Vec<LoadWarning>
 }
 
+/// Errors that DataFiles may encounter.
 #[derive(Debug)]
 pub enum DataFileError {
+    /// Non-ASCII characters were encountered.
     NonASCIIFile,
-    FileError(std::io::Error)
+    /// A file I/O error.
+    FileError(PathBuf, std::io::Error)
 }
 
+impl Display for DataFileError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
+            DataFileError::NonASCIIFile => "Non ASCII file.".to_string(),
+            DataFileError::FileError(p, e) => format!("IO error on {} ({})", p.to_string_lossy(), e.to_string())
+        };
+        write!(f, "Data File Error: {}", s)
+    }
+}
+
+impl Error for DataFileError { }
+
+/// Convenient Result shorthand for DataFileError Results.
 pub type Result<T> = std::result::Result<T, DataFileError>;
 
 impl DataFile {
+    /// Attempt to load a file and parse its rows and fields.
+    /// Non-fatal issues are included in the DataFile as a list of LoadWarnings.
     pub fn try_load(path: &Path, row_defs: &Vec<DataFieldDef>) -> Result<DataFile> {
         let data = fs::read_to_string(path);
         if let Err(e) = data {
-            return Err(DataFileError::FileError(e))
+            return Err(DataFileError::FileError(path.into(), e))
         }
         let data = data.unwrap();
 
@@ -32,10 +54,10 @@ impl DataFile {
         let mut rows: Vec<DataRow> = vec![];
         let mut load_warnings: Vec<LoadWarning> = vec![];
 
-        for (row_num, row) in data.lines().enumerate() {
+        for (line_index, row) in data.lines().enumerate() {
             match DataRow::try_create(row, row_defs) {
                 Ok(r) => rows.push(r),
-                Err(e) => load_warnings.push(LoadWarning::new(row_num, e))
+                Err(e) => load_warnings.push(LoadWarning::new(line_index, Box::new(e)))
             }
         }
 

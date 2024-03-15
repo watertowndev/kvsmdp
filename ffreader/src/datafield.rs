@@ -1,3 +1,4 @@
+use std::error::Error;
 use std::fmt::{Debug, Display, Formatter};
 
 /// Contains a datafield, including name, raw data, and processes data (if any).
@@ -10,9 +11,13 @@ pub struct DataField {
 
 /// Errors that DataFields may encounter.
 pub enum DataFieldError {
+    /// The field specification has the starting index after the ending one.
     StartAfterEnd(String),
+    /// The field contains non-ASCII characters.
     NonASCII(String),
+    /// Problem occurred: used for application-specific post-processing errors.
     Problem(Box<dyn ToString>),
+    /// The field contains a quotation mark (").
     FieldContainsQuote(String)
 }
 
@@ -34,17 +39,34 @@ impl Debug for DataFieldError {
     }
 }
 
+impl Error for DataFieldError { }
+
+/// Convenient Result shorthand for DataFieldError Results.
 pub type Result<T> = std::result::Result<T, DataFieldError>;
 
 /// Holds details pertaining to the structure of a row and the desired post-processing function.
 pub struct DataFieldDef<'a> {
-    pub(crate) name: String,
-    pub(crate) start_idx: usize,
-    pub(crate) end_idx: usize,
-    pub(crate) post_process: &'a dyn Fn(String) -> Result<String>
+    /// The name of the field.
+    pub name: String,
+    /// The start index (0-based column) of the field
+    pub start_idx: usize,
+    /// The end index of the field (exclusive end)
+    /// e.g., ABC123 with start index 0 and end index 3 yields "ABC"
+    pub end_idx: usize,
+    /// Function to execute on the field after loading.
+    /// This function's output will affect the data stored and can return a
+    /// DataFieldError to facilitate validation.
+    pub post_process: &'a dyn Fn(String) -> Result<String>
+}
+
+impl Display for DataFieldDef<'_> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}: {}-{} ", self.name, self.start_idx, self.end_idx)
+    }
 }
 
 impl DataFieldDef<'_> {
+    /// Convenience function to instantiate a new DataFieldDef with the provided data.
     pub fn new(name: impl ToString, start_idx: usize, end_idx: usize,
                post_process: &dyn Fn(String)-> Result<String>) -> DataFieldDef {
         DataFieldDef {
@@ -57,6 +79,8 @@ impl DataFieldDef<'_> {
 }
 
 impl DataField {
+    /// Instantiate a new DataField. Panics if bad conditions occur,
+    /// such as non-ASCII data or quotes in the string.
     pub fn new(name: &str, data: String) -> DataField {
         assert!(data.is_ascii());
         assert!(!data.contains("\""));
@@ -71,7 +95,7 @@ impl DataField {
         }
     }
 
-    ///Try to create a DataField from a row using the provided data field definition.
+    /// Try to create a DataField from a row using the provided data field definition.
     pub fn try_from_row(row: &str, field_def: &DataFieldDef) -> Result<DataField>
     {
         //fields can be optional and result in lines that are short
@@ -117,17 +141,17 @@ impl DataField {
         })
     }
 
-    //Returns a reference to the name.
+    /// Obtain a reference to the name.
     pub fn name(&self) -> &String {
         &self.name
     }
 
-    //returns a clone of the data. An empty string is returned if None.
+    /// Obtain an unwrapped clone of the data. An empty string is returned if None.
     pub fn data(&self) -> String {
         self.data.clone().unwrap_or("".to_string())
     }
 
-    //returns a reference to the raw data.
+    /// Obtain a reference to the raw data.
     pub fn raw(&self) -> &String {
         &self.raw
     }
