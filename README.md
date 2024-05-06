@@ -19,7 +19,7 @@ The data library components are intended to be sufficiently generic that they ma
 Output files are overwritten if they exist.
 
 ## License
-This application and library is MIT licensed. See LICENSE.md for details.
+This application and library is licensed under a BSD license. See LICENSE.md for details.
 
 ## Roadmap
 Some of the things that need to be done soon.
